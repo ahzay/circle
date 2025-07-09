@@ -37,13 +37,12 @@ A simple app for coordinating shared resources (lawn mowers, tools, cars, etc.) 
 
 ### Phase 4: Coordination
 - [ ] Request to borrow resource
-- [ ] Simple approval/denial system
+- [ ] Simple approval/denial/auto-approve system
 - [ ] Track who has what currently
 
 ### Phase 5: Polish
 - [ ] Return process
 - [ ] Resource availability calendar
-- [ ] Basic notifications
 
 ## Technical Details
 

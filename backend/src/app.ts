@@ -5,6 +5,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
+import circlesRouter from './routes/circles';
 
 // Create Express application instance
 // Similar to: mux := mux.NewRouter() in Go
@@ -54,13 +55,9 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API routes will be added here later
-// Similar to: router.PathPrefix("/api").Subrouter() in Go
-app.use('/api', (req, res) => {
-  res.status(404).json({
-    error: 'API endpoints not implemented yet'
-  });
-});
+// API routes - mount circle routes at /api/circles
+// Similar to: router.PathPrefix("/api/circles").Subrouter() in Go
+app.use('/api/circles', circlesRouter);
 
 // Note: Catch-all route removed due to path-to-regexp issue
 // Express will return 404 for undefined routes by default
@@ -68,7 +65,7 @@ app.use('/api', (req, res) => {
 // Error handling middleware
 // Must be defined last - Express calls this when errors occur
 // Similar to error handling in Go HTTP handlers
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Server error:', err);
   res.status(500).json({
     error: 'Internal server error'
