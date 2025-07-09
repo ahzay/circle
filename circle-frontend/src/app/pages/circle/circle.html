@@ -55,52 +55,75 @@
         </div>
       </div>
 
-      <!-- If user is NOT a member, show join form -->
+      <!-- If user is NOT a member, show join options -->
       @if (!isUserMember()) {
         <div style="border-top: 1px solid #e0e0e0; padding-top: 24px;">
           <h3>Join This Circle</h3>
-          <p>Enter your name to join this trusted group:</p>
+          
+          <!-- Option 1: Are you one of these existing users? -->
+          @if (circle()?.users && circle()!.users.length > 0) {
+            <div style="margin-bottom: 24px;">
+              <h4>Are you one of these people?</h4>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">
+                @for (user of circle()?.users; track user.id) {
+                  <button 
+                    mat-stroked-button 
+                    (click)="selectExistingUser(user)"
+                    [disabled]="isJoining()"
+                    style="margin: 4px;"
+                  >
+                    <mat-icon>person</mat-icon>
+                    {{ user.name }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+          
+          <!-- Option 2: Create new user -->
+          <div>
+            <h4>Or create a new identity:</h4>
+            <form [formGroup]="joinForm" (ngSubmit)="onJoin()">
+              <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
+                <mat-label>Your Name</mat-label>
+                <input 
+                  matInput 
+                  formControlName="userName"
+                  placeholder="e.g., John Doe"
+                  maxlength="50"
+                >
+                <mat-hint>This is how others will see you in the circle</mat-hint>
+                
+                <!-- Show validation errors -->
+                @if (getFieldError('userName')) {
+                  <mat-error>{{ getFieldError('userName') }}</mat-error>
+                }
+                
+                <!-- Show name taken error -->
+                @if (joinForm.get('userName')?.value && isNameTaken(joinForm.get('userName')?.value)) {
+                  <mat-error>This name is already taken in this circle</mat-error>
+                }
+              </mat-form-field>
 
-          <form [formGroup]="joinForm" (ngSubmit)="onJoin()">
-            <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
-              <mat-label>Your Name</mat-label>
-              <input 
-                matInput 
-                formControlName="userName"
-                placeholder="e.g., John Doe"
-                maxlength="50"
+              <button 
+                mat-raised-button 
+                color="primary" 
+                type="submit"
+                [disabled]="isJoining() || !joinForm.valid || isNameTaken(joinForm.get('userName')?.value || '')"
+                style="margin-top: 16px;"
               >
-              <mat-hint>This is how others will see you in the circle</mat-hint>
-              
-              <!-- Show validation errors -->
-              @if (getFieldError('userName')) {
-                <mat-error>{{ getFieldError('userName') }}</mat-error>
-              }
-              
-              <!-- Show name taken error -->
-              @if (joinForm.get('userName')?.value && isNameTaken(joinForm.get('userName')?.value)) {
-                <mat-error>This name is already taken in this circle</mat-error>
-              }
-            </mat-form-field>
-
-            <button 
-              mat-raised-button 
-              color="primary" 
-              type="submit"
-              [disabled]="isJoining() || !joinForm.valid || isNameTaken(joinForm.get('userName')?.value || '')"
-              style="margin-top: 16px;"
-            >
-              @if (isJoining()) {
-                <mat-spinner diameter="20"></mat-spinner>
-                Joining Circle...
-              } @else {
-                <ng-container>
-                  <mat-icon>person_add</mat-icon>
-                  Join Circle
-                </ng-container>
-              }
-            </button>
-          </form>
+                @if (isJoining()) {
+                  <mat-spinner diameter="20"></mat-spinner>
+                  Joining Circle...
+                } @else {
+                  <ng-container>
+                    <mat-icon>person_add</mat-icon>
+                    Join as New User
+                  </ng-container>
+                }
+              </button>
+            </form>
+          </div>
         </div>
       }
 

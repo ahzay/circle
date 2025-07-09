@@ -94,6 +94,26 @@ export class Circle implements OnInit {
   }
 
   /**
+   * Select an existing user identity
+   * 
+   * When someone clicks on an existing user, store that identity
+   * and mark them as a member of the circle.
+   */
+  selectExistingUser(user: any): void {
+    const circle = this.circle();
+    if (!circle) return;
+    
+    // Store the selected user identity in browser storage
+    this.userStorage.setUserForCircle(circle.id, user);
+    this.userStorage.setPreferredName(user.name);
+    
+    // Show success message
+    this.snackBar.open(`Welcome back, ${user.name}!`, 'Close', {
+      duration: 3000
+    });
+  }
+
+  /**
    * Handle joining the circle
    */
   onJoin(): void {
