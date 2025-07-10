@@ -22,9 +22,6 @@ import { API_ENDPOINTS } from '@shared/models';
   providedIn: 'root' // Makes this service available app-wide as a singleton
 })
 export class ResourceService {
-  // Base URL for resource API endpoints
-  private readonly baseUrl = 'http://localhost:3000/api/resources';
-
   /**
    * Constructor - Angular automatically injects HttpClient
    * 
@@ -43,7 +40,7 @@ export class ResourceService {
    */
   createResource(resource: CreateResourceRequest): Observable<ResourceResponse> {
     // POST /api/resources
-    return this.http.post<ResourceResponse>(this.baseUrl, resource);
+    return this.http.post<ResourceResponse>(API_ENDPOINTS.BASE_URL + API_ENDPOINTS.RESOURCES, resource);
   }
 
   /**
