@@ -15,3 +15,11 @@
 // Re-export all models from their respective files
 export * from './user.model';
 export * from './circle.model';
+export * from './resource.model';
+export * from './borrow-request.model';
+
+// Re-export shared utilities
+export * from '../validation';
+export * from '../constants';
+export * from '../utils';
+export * from '../errors';

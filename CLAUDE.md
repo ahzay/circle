@@ -15,19 +15,6 @@ This is a full-stack TypeScript application with:
 - **Storage**: In-memory first (database to be added later)
 - **Security**: Link-sharing model for trusted groups only
 
-## Common Development Commands
-
-### Backend (from `backend/` directory)
-- No specific dev script yet - backend is minimal
-- Tests: `npm test` (currently just placeholder)
-
-### Frontend (from `circle-frontend/` directory)
-- **Development server**: `ng serve` (serves at localhost:4200)
-- **Build**: `ng build` (production build)
-- **Watch build**: `ng build --watch --configuration development`
-- **Test**: `ng test` (Karma + Jasmine)
-- **CLI**: `ng` (Angular CLI commands)
-
 ## Key Technical Details
 
 ### Data Models
@@ -59,15 +46,6 @@ The project follows a phased approach:
 5. **Phase 5**: Polish and notifications
 
 Test each phase end-to-end before moving to the next.
-
-## Angular-Specific Notes
-
-For React developers working with Angular:
-- Use **services** instead of custom hooks for business logic
-- **Signals** are the new reactive state management
-- Template syntax: `{{ }}` for interpolation, `@if`/`@for` for control flow
-- **Dependency injection** manages service instances
-- **RxJS observables** handle async operations
 
 ## Trust Model
 

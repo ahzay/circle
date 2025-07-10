@@ -127,17 +127,50 @@
         </div>
       }
 
-      <!-- If user IS a member, show member view -->
+      <!-- If user IS a member, show member view with resources -->
       @if (isUserMember()) {
         <div style="border-top: 1px solid #e0e0e0; padding-top: 24px;">
-          <div style="text-align: center; padding: 24px; background-color: #f5f5f5; border-radius: 8px;">
-            <mat-icon style="font-size: 48px; width: 48px; height: 48px; color: #666;">construction</mat-icon>
-            <h3>Welcome Back!</h3>
-            <p>You're a member of this circle. Resource sharing features will be implemented in Phase 3.</p>
-            <p style="margin-top: 16px;">
-              <strong>Share this circle:</strong><br>
+          <!-- Share circle section -->
+          <div style="text-align: center; padding: 16px; background-color: #f5f5f5; border-radius: 8px; margin-bottom: 24px;">
+            <h3>Share this circle</h3>
+            <p style="margin-top: 8px;">
               <code>{{ circle()?.shareableUrl }}</code>
             </p>
+          </div>
+
+          <!-- Resources section -->
+          <div style="margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h3>Resources</h3>
+              @if (!showAddResourceForm()) {
+                <button 
+                  mat-raised-button 
+                  color="primary" 
+                  (click)="showAddResource()">
+                  <mat-icon>add</mat-icon>
+                  Add Resource
+                </button>
+              }
+            </div>
+
+            <!-- Add resource form -->
+            @if (showAddResourceForm()) {
+              <app-add-resource
+                [circleId]="circle()!.id"
+                [currentUserId]="getCurrentUserId()"
+                (resourceCreated)="onResourceCreated($event)"
+                (cancelled)="onAddResourceCancelled()">
+              </app-add-resource>
+            }
+
+            <!-- Resources list -->
+            @if (!showAddResourceForm()) {
+              <app-resource-list
+                [circleId]="circle()!.id"
+                [currentUserId]="getCurrentUserId()"
+                (resourceDeleted)="onResourceDeleted($event)">
+              </app-resource-list>
+            }
           </div>
         </div>
       }

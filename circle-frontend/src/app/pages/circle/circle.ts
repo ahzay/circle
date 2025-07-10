@@ -19,7 +19,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { CircleService } from '../../services/circle.service';
 import { UserStorageService } from '../../services/user-storage.service';
-import { CircleResponse } from '@shared/models';
+import { ResourceList } from '../../components/resource-list/resource-list';
+import { AddResource } from '../../components/add-resource/add-resource';
+import { CircleResponse, ResourceResponse } from '@shared/models';
 
 @Component({
   selector: 'app-circle',
@@ -31,7 +33,9 @@ import { CircleResponse } from '@shared/models';
     MatIconModule,
     MatProgressSpinnerModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    ResourceList,
+    AddResource
   ],
   templateUrl: './circle.html'
 })
@@ -49,6 +53,9 @@ export class Circle implements OnInit {
   
   // Form for joining the circle
   joinForm: FormGroup;
+
+  // Resource management state
+  showAddResourceForm = signal(false);
 
   constructor() {
     // Initialize the join form
@@ -190,5 +197,49 @@ export class Circle implements OnInit {
    */
   formatDate(date: Date | string): string {
     return new Date(date).toLocaleDateString();
+  }
+
+  /**
+   * Get current user ID for the circle
+   */
+  getCurrentUserId(): string {
+    const circle = this.circle();
+    if (!circle) return '';
+    
+    const storedUser = this.userStorage.getUserForCircle(circle.id);
+    return storedUser?.id || '';
+  }
+
+  /**
+   * Show the add resource form
+   */
+  showAddResource(): void {
+    this.showAddResourceForm.set(true);
+  }
+
+  /**
+   * Handle resource creation success
+   */
+  onResourceCreated(resource: ResourceResponse): void {
+    this.showAddResourceForm.set(false);
+    this.snackBar.open(`"${resource.name}" has been added to the circle!`, 'Close', {
+      duration: 3000
+    });
+  }
+
+  /**
+   * Handle add resource form cancellation
+   */
+  onAddResourceCancelled(): void {
+    this.showAddResourceForm.set(false);
+  }
+
+  /**
+   * Handle resource deletion
+   */
+  onResourceDeleted(resourceId: string): void {
+    this.snackBar.open('Resource has been deleted', 'Close', {
+      duration: 3000
+    });
   }
 }

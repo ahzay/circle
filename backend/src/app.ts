@@ -6,6 +6,8 @@ import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
 import circlesRouter from './routes/circles';
+import resourcesRouter from './routes/resources';
+import borrowRequestsRouter from './routes/borrow-requests';
 
 // Create Express application instance
 // Similar to: mux := mux.NewRouter() in Go
@@ -58,6 +60,14 @@ app.get('/health', (req, res) => {
 // API routes - mount circle routes at /api/circles
 // Similar to: router.PathPrefix("/api/circles").Subrouter() in Go
 app.use('/api/circles', circlesRouter);
+
+// Mount resource routes at /api/resources for individual resource operations
+// Resource creation/listing is handled under /api/circles/:circleId/resources
+app.use('/api/resources', resourcesRouter);
+
+// Mount borrow request routes at /api/borrow-requests for borrowing workflow
+// Handles the complete lifecycle: request -> approve/deny -> return
+app.use('/api/borrow-requests', borrowRequestsRouter);
 
 // Note: Catch-all route removed due to path-to-regexp issue
 // Express will return 404 for undefined routes by default

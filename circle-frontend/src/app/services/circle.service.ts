@@ -16,18 +16,20 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, throwError } from 'rxjs';
 
-// Import shared models - same types used by backend!
+// Import shared models and utilities - same types used by backend!
 import { 
   CircleResponse, 
   CreateCircleRequest, 
-  JoinCircleRequest 
+  JoinCircleRequest,
+  API_ENDPOINTS,
+  ErrorHandler
 } from '@shared/models';
 
 @Injectable({
   providedIn: 'root' // This makes the service available app-wide
 })
 export class CircleService {
-  private readonly apiUrl = 'http://localhost:3000/api/circles';
+  private readonly apiUrl = API_ENDPOINTS.BASE_URL + API_ENDPOINTS.CIRCLES;
 
   /**
    * Constructor - Angular's dependency injection provides HttpClient
@@ -63,7 +65,8 @@ export class CircleService {
    * @returns Observable that emits CircleResponse or error
    */
   getCircle(circleId: string): Observable<CircleResponse> {
-    return this.http.get<CircleResponse>(`${this.apiUrl}/${circleId}`)
+    const url = API_ENDPOINTS.BASE_URL + API_ENDPOINTS.CIRCLE_BY_ID(circleId);
+    return this.http.get<CircleResponse>(url)
       .pipe(
         catchError(this.handleError)
       );
@@ -80,7 +83,8 @@ export class CircleService {
    * @returns Observable that emits updated CircleResponse or error
    */
   joinCircle(circleId: string, request: JoinCircleRequest): Observable<CircleResponse> {
-    return this.http.post<CircleResponse>(`${this.apiUrl}/${circleId}/join`, request)
+    const url = API_ENDPOINTS.BASE_URL + API_ENDPOINTS.CIRCLE_JOIN(circleId);
+    return this.http.post<CircleResponse>(url, request)
       .pipe(
         catchError(this.handleError)
       );
@@ -96,23 +100,11 @@ export class CircleService {
    * @returns Observable that emits an error
    */
   private handleError(error: any): Observable<never> {
-    let errorMessage = 'An unexpected error occurred';
-    
-    if (error.error?.error) {
-      // Backend sent us a structured error message
-      errorMessage = error.error.error;
-    } else if (error.status === 0) {
-      // Network error (backend not reachable)
-      errorMessage = 'Cannot connect to server. Please check your internet connection.';
-    } else if (error.status === 404) {
-      // Resource not found
-      errorMessage = 'Circle not found. Please check the link and try again.';
-    } else if (error.status === 500) {
-      // Server error
-      errorMessage = 'Server error. Please try again later.';
-    }
+    // Use shared error handler for consistent error handling
+    const circleError = ErrorHandler.fromHttpError(error);
+    const userFriendlyMessage = ErrorHandler.getUserFriendlyMessage(circleError);
     
     console.error('Circle service error:', error);
-    return throwError(() => new Error(errorMessage));
+    return throwError(() => new Error(userFriendlyMessage));
   }
 }

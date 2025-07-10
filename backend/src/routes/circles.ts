@@ -16,7 +16,15 @@
 
 import express from 'express';
 import { StorageService } from '../services/storage.service';
-import { CreateCircleRequest, CircleResponse, JoinCircleRequest } from '../../../shared/models';
+import { 
+  CreateCircleRequest, 
+  JoinCircleRequest,
+  ValidationUtils,
+  ResponseUtils,
+  ErrorHandler,
+  NotFoundError,
+  HTTP_STATUS
+} from '../../../shared/models';
 
 // Create Express router to group circle-related endpoints
 const router = express.Router();
@@ -35,46 +43,27 @@ router.post('/', (req, res) => {
     // Extract data from request body (sent by frontend)
     const { name, creatorName }: CreateCircleRequest = req.body;
     
-    // Validate required fields
-    if (!name || !creatorName) {
-      return res.status(400).json({
-        error: 'Missing required fields: name and creatorName are required'
-      });
-    }
-    
-    // Validate field lengths (prevent extremely long names)
-    if (name.length > 100) {
-      return res.status(400).json({
-        error: 'Circle name must be 100 characters or less'
-      });
-    }
-    
-    if (creatorName.length > 50) {
-      return res.status(400).json({
-        error: 'Creator name must be 50 characters or less'
+    // Validate request using shared validation
+    const validation = ValidationUtils.validateCreateCircleRequest(req.body);
+    if (!validation.isValid) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        error: validation.error
       });
     }
     
     // Create the circle using our storage service
     const circle = StorageService.createCircle(name.trim(), creatorName.trim());
     
-    // Build response with additional computed properties
-    const response: CircleResponse = {
-      ...circle, // Spread operator copies all properties from circle
-      userCount: circle.users.length,
-      shareableUrl: `http://localhost:4200/join/${circle.id}`, // Point to Angular frontend
-      createdAtFormatted: circle.createdAt.toLocaleString()
-    };
+    // Build response using shared utility
+    const response = ResponseUtils.enhanceCircleResponse(circle);
     
     // Send successful response with 201 (Created) status
-    res.status(201).json(response);
+    res.status(HTTP_STATUS.CREATED).json(response);
     
   } catch (error) {
-    // Handle unexpected errors
-    console.error('Error creating circle:', error);
-    res.status(500).json({
-      error: 'Internal server error while creating circle'
-    });
+    // Handle errors using shared error handler
+    const { statusCode, body } = ErrorHandler.handleApiError(error);
+    res.status(statusCode).json(body);
   }
 });
 
@@ -92,10 +81,11 @@ router.get('/:id', (req, res) => {
     // Extract circle ID from URL parameter
     const { id } = req.params;
     
-    // Validate ID format (basic check)
-    if (!id || id.length < 10) {
-      return res.status(400).json({
-        error: 'Invalid circle ID format'
+    // Validate ID format using shared validation
+    const idValidation = ValidationUtils.validateId(id);
+    if (!idValidation.isValid) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        error: idValidation.error
       });
     }
     
@@ -103,28 +93,19 @@ router.get('/:id', (req, res) => {
     const circle = StorageService.getCircle(id);
     
     if (!circle) {
-      return res.status(404).json({
-        error: 'Circle not found'
-      });
+      throw new NotFoundError();
     }
     
-    // Build response with additional computed properties
-    const response: CircleResponse = {
-      ...circle,
-      userCount: circle.users.length,
-      shareableUrl: `http://localhost:4200/join/${circle.id}`, // Point to Angular frontend
-      createdAtFormatted: circle.createdAt.toLocaleString()
-    };
+    // Build response using shared utility
+    const response = ResponseUtils.enhanceCircleResponse(circle);
     
     // Send successful response
     res.json(response);
     
   } catch (error) {
-    // Handle unexpected errors
-    console.error('Error getting circle:', error);
-    res.status(500).json({
-      error: 'Internal server error while retrieving circle'
-    });
+    // Handle errors using shared error handler
+    const { statusCode, body } = ErrorHandler.handleApiError(error);
+    res.status(statusCode).json(body);
   }
 });
 
@@ -144,62 +125,41 @@ router.post('/:id/join', (req, res) => {
     const { id } = req.params;
     const { userName }: JoinCircleRequest = req.body;
     
-    // Validate required fields
-    if (!id || !userName) {
-      return res.status(400).json({
-        error: 'Missing required fields: circle ID and userName are required'
+    // Validate ID
+    const idValidation = ValidationUtils.validateId(id);
+    if (!idValidation.isValid) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        error: idValidation.error
       });
     }
     
-    // Validate field lengths
-    if (userName.length > 50) {
-      return res.status(400).json({
-        error: 'User name must be 50 characters or less'
+    // Validate request using shared validation
+    const validation = ValidationUtils.validateJoinCircleRequest(req.body);
+    if (!validation.isValid) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        error: validation.error
       });
     }
     
     // Check if circle exists first
     const existingCircle = StorageService.getCircle(id);
     if (!existingCircle) {
-      return res.status(404).json({
-        error: 'Circle not found'
-      });
+      throw new NotFoundError();
     }
     
     // Add user to circle (throws error if username already exists)
     const updatedCircle = StorageService.addUserToCircle(id, userName.trim());
     
-    // Build response with additional computed properties
-    const response: CircleResponse = {
-      ...updatedCircle,
-      userCount: updatedCircle.users.length,
-      shareableUrl: `http://localhost:4200/join/${updatedCircle.id}`, // Point to Angular frontend
-      createdAtFormatted: updatedCircle.createdAt.toLocaleString()
-    };
+    // Build response using shared utility
+    const response = ResponseUtils.enhanceCircleResponse(updatedCircle);
     
     // Send successful response
     res.json(response);
     
   } catch (error) {
-    // Handle specific business logic errors
-    if (error instanceof Error) {
-      if (error.message.includes('already exists')) {
-        return res.status(409).json({
-          error: error.message
-        });
-      }
-      if (error.message.includes('not found')) {
-        return res.status(404).json({
-          error: error.message
-        });
-      }
-    }
-    
-    // Handle unexpected errors
-    console.error('Error joining circle:', error);
-    res.status(500).json({
-      error: 'Internal server error while joining circle'
-    });
+    // Handle errors using shared error handler
+    const { statusCode, body } = ErrorHandler.handleApiError(error);
+    res.status(statusCode).json(body);
   }
 });
 
