@@ -1,0 +1,6 @@
+{
+  "name": "@circle/shared",
+  "dependencies": {
+    "zod": "^4.0.5"
+  }
+}
